@@ -1,0 +1,219 @@
+/* App-level styles: the shell, page furniture, and the login screen. Tokens and
+   global rules live in tokens.css and the UI kit's styles in ui/ui.css; both are
+   pulled in here so main.tsx keeps one stylesheet import.
+
+   legacy-screens.css (the GB-28 bridge for pre-rebuild donor/requester markup)
+   was deleted at GB-31a — GB-29 and GB-30 rebuilt every screen it propped up. */
+@import './tokens.css';
+@import './ui/ui.css';
+
+/* ── App shell ───────────────────────────────────────────────────────────── */
+
+.app-header {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  height: 56px;
+  background: color-mix(in srgb, var(--bg) 85%, transparent);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+}
+
+.app-header-inner {
+  display: flex;
+  align-items: center;
+  gap: var(--s4);
+  height: 100%;
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 0 var(--s4);
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s2);
+  font-size: var(--t-base);
+  font-weight: 600;
+}
+
+.brand-mark {
+  display: inline-flex;
+  color: var(--blood);
+}
+
+.app-nav {
+  display: flex;
+  gap: var(--s2);
+  margin-left: auto;
+}
+
+.app-nav a {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  padding: 0 var(--s2);
+  color: var(--muted);
+  font-size: var(--t-sm);
+  text-decoration: none;
+  transition: color var(--dur-fast) var(--ease);
+}
+
+.app-nav a:hover {
+  color: var(--text);
+}
+
+.app-nav a[aria-current='page'] {
+  color: var(--text);
+}
+
+.app-nav a[aria-current='page']::after {
+  content: '';
+  position: absolute;
+  right: var(--s2);
+  bottom: 0;
+  left: var(--s2);
+  height: 2px;
+  background: var(--accent);
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+}
+
+.header-actions .btn {
+  min-width: 40px;
+  padding: 0 var(--s2);
+}
+
+.app-main {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: var(--s4);
+}
+
+@media (min-width: 768px) {
+  .app-header-inner,
+  .app-main {
+    padding-left: var(--s6);
+    padding-right: var(--s6);
+  }
+
+  .app-main {
+    padding-top: var(--s6);
+    padding-bottom: var(--s6);
+  }
+}
+
+/* Route mount: fade only. CSS only — no animation library ships here.
+   The 4px rise DESIGN.md asks for is dropped on purpose (declared deviation,
+   GB-31a): a transform anywhere in a keyframe makes the element a containing
+   block for `position: fixed` descendants for as long as the animation is
+   attached, which detached every StickyBar from the viewport. StickyBar now
+   portals out of this subtree too, so this is the second of two locks. */
+.route {
+  animation: route-in var(--dur) var(--ease) both;
+}
+
+@keyframes route-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* ── Page furniture ──────────────────────────────────────────────────────── */
+
+h2 {
+  margin: 0 0 var(--s4);
+  font-size: var(--t-xl);
+}
+
+p {
+  margin: 0 0 var(--s4);
+  color: var(--muted);
+}
+
+.status {
+  margin: 0;
+  font-size: var(--t-sm);
+  color: var(--muted);
+}
+
+.error {
+  margin: 0;
+  font-size: var(--t-sm);
+  color: var(--danger);
+}
+
+/* ── Fatal fallback (components/ErrorBoundary) ───────────────────────────── */
+
+/* Not a Card: the UI kit may be exactly what failed, so this styles itself off
+   tokens alone and shares nothing with the tree it is replacing. */
+.fatal {
+  display: flex;
+  justify-content: center;
+  padding: var(--s16) var(--s4);
+}
+
+.fatal-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--s3);
+  max-width: 360px;
+  padding: var(--s5);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-card);
+}
+
+.fatal-title {
+  margin: 0;
+  font-size: var(--t-lg);
+  font-weight: 600;
+  color: var(--text);
+}
+
+.fatal-note {
+  margin: 0;
+  font-size: var(--t-sm);
+  color: var(--muted);
+}
+
+/* ── Login ───────────────────────────────────────────────────────────────── */
+
+.login {
+  padding-top: 25vh;
+}
+
+.login-card {
+  max-width: 360px;
+  margin: 0 auto;
+}
+
+.login-mark {
+  color: var(--blood);
+}
+
+.login-title {
+  font-size: var(--t-xl);
+}
+
+.login-lede {
+  margin: 0;
+  font-size: var(--t-sm);
+  color: var(--muted);
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s4);
+  max-width: none;
+}
+

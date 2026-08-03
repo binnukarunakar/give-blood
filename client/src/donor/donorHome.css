@@ -1,0 +1,97 @@
+/* Donor home (GB-29, docs/DESIGN.md § Screens): the identity, alerts and
+   donation cards. The confirm sheet all three share is src/ui/ConfirmSheet
+   (folded there at GB-31a — the requester had written the same sheet).
+   Semantic tokens only — no raw colours, no values off the 4-grid. Anything
+   reusable belongs in src/ui, not here. Loaded via ./donor.css. */
+
+/* ── Donor home ──────────────────────────────────────────────────────────── */
+
+.identity-row {
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+}
+
+.identity-handle {
+  margin: 0;
+  font-size: var(--t-xl);
+  font-weight: 600;
+}
+
+.identity-meta {
+  margin: 0;
+  font-size: var(--t-sm);
+  color: var(--muted);
+}
+
+.identity-status {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s2);
+}
+
+.snooze-block {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s2);
+}
+
+.snooze-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s2);
+}
+
+.snooze-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: var(--r-pill);
+  background: var(--ok);
+}
+
+.snooze-note {
+  margin: 0;
+  font-size: var(--t-sm);
+  color: var(--subtle);
+}
+
+/* Consent is the permission itself, not a pause: a divider keeps it away from
+   the controls above it (DESIGN.md § Donor home). */
+.consent-block {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s2);
+  padding-top: var(--s4);
+  border-top: 1px solid var(--border);
+}
+
+.consent-note {
+  margin: 0;
+  font-size: var(--t-sm);
+  color: var(--subtle);
+}
+
+.donation-lines {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s2);
+}
+
+.donation-line {
+  margin: 0;
+  font-size: var(--t-sm);
+  color: var(--muted);
+}
+
+.donation-value {
+  color: var(--text);
+}
+
+.donation-action {
+  display: flex;
+}
+
+/* A lone ghost action aligns its label with the card's text, not its box. */
+.donation-action .btn {
+  margin-left: calc(var(--s4) * -1);
+}

@@ -1,0 +1,47 @@
+{
+  "name": "give-blood-client",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.worker.json --noEmit && tsc -p tsconfig.node.json --noEmit",
+    "lint": "eslint .",
+    "test": "vitest run",
+    "verify:no-demo": "node scripts/verify-no-demo.mjs",
+    "shoot": "node scripts/shoot.mjs"
+  },
+  "dependencies": {
+    "firebase": "^12.4.0",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "react-router": "^8.3.0",
+    "workbox-precaching": "^7.3.0"
+  },
+  "devDependencies": {
+    "@testing-library/dom": "^10.4.0",
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.3.0",
+    "@testing-library/user-event": "^14.6.1",
+    "@types/node": "^26.1.1",
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "@vitejs/plugin-react": "^5.0.0",
+    "eslint": "^10.7.0",
+    "jsdom": "^27.0.0",
+    "playwright": "^1.62.1",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.65.0",
+    "vite": "^7.1.0",
+    "vite-plugin-pwa": "^1.0.3",
+    "vitest": "^4.1.10"
+  },
+  "overrides": {
+    "brace-expansion": "^5.0.9"
+  }
+}

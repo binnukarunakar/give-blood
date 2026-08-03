@@ -1,0 +1,19 @@
+/* Demo-mode styles (GB-27, retokenised GB-28, rebuilt to DESIGN.md § Demo
+   chrome in GB-30). Imported only by src/demo/mountDemo.tsx, which is reached
+   only through the VITE_DEMO_MODE branch in main.tsx — so a production build
+   carries none of these bytes (verified by npm run verify:no-demo, which greps
+   the emitted assets for the .demo-bar class name).
+
+   The button selectors in these files are deliberately over-specific: this
+   stylesheet's position in the bundled CSS is decided by a dynamic import, so
+   it has to win on specificity rather than on order.
+
+   The persona pills honour the 44px touch minimum since GB-33, so the strip is
+   52px rather than the 40px DESIGN.md specifies (declared deviation, recorded
+   in demoBar.css). The sweep/reset levers stay 28px: they are chrome on the
+   chrome, and nobody's demo turns on hitting Reset first time.
+
+   One entry point, split in two only to keep each file under the 300-line cap,
+   the same way src/ui/ui.css splits controls from surfaces. */
+@import './demoBar.css';
+@import './demoInbox.css';

@@ -1,0 +1,224 @@
+/* Requester surfaces (GB-30) — docs/DESIGN.md § Requester home, New request,
+   Request detail. Imported from pages/RequesterHome.tsx and
+   pages/RequestDetail.tsx, because src/styles.css is the lead's file this
+   sprint. Semantic tokens only.
+
+   The blood-group grid and the confirm sheet both converged with the donor
+   side, so GB-31a moved them into src/ui (BloodGroupGrid, ConfirmSheet). */
+
+@import './requesterForm.css';
+
+/* ── Page head ───────────────────────────────────────────────────────────── */
+
+.page-head {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s4);
+  margin: 0 0 var(--s6);
+}
+
+.page-headings {
+  margin-right: auto;
+}
+
+/* The action goes to the far edge of the row. Two classes, so it beats the
+   `.page-title { margin: 0 }` reset regardless of the order they land in. */
+.page-head .btn {
+  margin-left: auto;
+}
+
+.page-title {
+  margin: 0;
+  font-size: var(--t-xl);
+}
+
+/* Not .page-sub: GB-29's donor.css defines that name with a different margin,
+   and both stylesheets are live at once in the demo build. */
+.page-lede {
+  margin: var(--s1) 0 0;
+  font-size: var(--t-sm);
+  color: var(--muted);
+}
+
+.section-title {
+  margin: var(--s8) 0 var(--s4);
+  font-size: var(--t-sm);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+
+.banner-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s3);
+  margin: 0 0 var(--s6);
+}
+
+.banner-stack:empty {
+  display: none;
+}
+
+.calm-copy {
+  margin: 0;
+  font-size: var(--t-sm);
+  color: var(--muted);
+}
+
+/* ── Request list ────────────────────────────────────────────────────────── */
+
+.req-list,
+.pledge-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.req-link {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+}
+
+.req-link:hover .card {
+  border-color: var(--border-strong);
+}
+
+.req-top {
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+}
+
+.req-units {
+  font-size: var(--t-base);
+  color: var(--text);
+}
+
+.req-top .status-chip {
+  margin-left: auto;
+}
+
+.req-chevron {
+  display: inline-flex;
+  color: var(--subtle);
+}
+
+.req-foot {
+  margin: 0;
+  font-size: var(--t-sm);
+  color: var(--subtle);
+}
+
+/* ── Request facts header ────────────────────────────────────────────────── */
+
+.facts {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s4);
+  margin: 0 0 var(--s6);
+}
+
+.facts-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s3);
+}
+
+.facts-units {
+  font-size: var(--t-lg);
+  color: var(--text);
+}
+
+.facts-hospital {
+  margin: 0;
+  font-size: var(--t-sm);
+  color: var(--muted);
+}
+
+.facts-meta {
+  margin: 0;
+  font-size: var(--t-sm);
+  color: var(--subtle);
+}
+
+.live-line {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+  margin: 0;
+  font-size: var(--t-xs);
+  color: var(--subtle);
+}
+
+.live-dot {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: var(--r-pill);
+  background: var(--ok);
+  animation: live-pulse 1.6s ease-in-out infinite;
+}
+
+/* 100% is full opacity, so the reduced-motion kill switch in tokens.css lands
+   the dot on a solid dot rather than a half-faded one. */
+@keyframes live-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .live-dot {
+    animation: none;
+  }
+}
+
+/* ── Pledge cards ────────────────────────────────────────────────────────── */
+
+.pledge-top {
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+}
+
+.pledge-handle {
+  margin: 0;
+  font-size: var(--t-base);
+  font-weight: 600;
+}
+
+.pledge-top .status-chip {
+  margin-left: auto;
+}
+
+.pledge-eta,
+.pledge-note {
+  margin: 0;
+  font-size: var(--t-sm);
+  color: var(--muted);
+}
+
+/* a.pledge-tel, not .pledge-tel: it borrows .btn's ghost look, and at equal
+   specificity .btn's own padding would win on bundle order and indent the row. */
+a.pledge-tel {
+  align-self: flex-start;
+  padding: 0;
+  text-decoration: none;
+}
+
+.pledge-actions {
+  display: flex;
+  gap: var(--s2);
+}
+
+/* Destructive intent sits alone, far below anything routine (DESIGN.md). */
+.danger-foot {
+  margin-top: var(--s10);
+}

@@ -1,0 +1,4 @@
+/* The UI kit's styles. One entry point (imported once, from src/styles.css),
+   split in two only to keep each file under the 300-line cap. */
+@import './controls.css';
+@import './surfaces.css';

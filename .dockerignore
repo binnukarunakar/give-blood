@@ -1,0 +1,50 @@
+# Build context = apps/give-blood. Ship source only; the image builds its own
+# node_modules and its own dist in the stages that need them.
+
+# Installed + built output — rebuilt inside the image, and a host build would
+# carry darwin binaries into a linux image.
+**/node_modules
+**/dist
+**/dev-dist
+
+# Secrets. First rule of this file: a real .env must never enter the context,
+# where it would land in a layer and in `docker history`. .env.example is
+# excluded too — nothing in the build reads it.
+**/.env
+**/.env.*
+**/*.local
+
+# Test artifacts and test-only sources. Nothing in the runtime path imports
+# them; excluding them keeps the emitted dist and the context small.
+**/coverage
+**/*.test.ts
+**/*.test.tsx
+server/src/e2e
+client/src/test
+server/vitest.config.ts
+
+# The local demo, and the fake token verifier it is built on. Neither is
+# imported by src/index.ts, src/app.ts or any production module — so keeping
+# them out of the context costs nothing and upgrades the guarantee from "the
+# production image never runs the fake verifier" to "the production image does
+# not contain it". A shipped image holds no code that accepts 'demo-asha' as an
+# identity. Run the demo from source instead: docs/DEMO.md.
+server/src/demo
+server/src/auth/fakeVerifier.ts
+# client/src/demo is NOT excluded: main.tsx reaches it through a dynamic import
+# that Vite must still resolve at build time. It is removed from the bundle by
+# the VITE_DEMO_MODE fold instead, which client/src/demo/demoOff.test.tsx
+# asserts directly.
+
+# History and editor noise.
+.git
+.gitignore
+**/.DS_Store
+
+# Docs and planning. Read in the repo, not in the image.
+**/*.md
+docs
+
+# This file and the Dockerfile itself.
+Dockerfile
+.dockerignore

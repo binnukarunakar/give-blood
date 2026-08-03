@@ -1,0 +1,122 @@
+/* Donor onboarding (GB-29, docs/DESIGN.md § Screens): the three numbered
+   cards, the area picker, and the push step.
+   Semantic tokens only — no raw colours, no values off the 4-grid. Anything
+   reusable belongs in src/ui, not here. Loaded via ./donor.css. */
+
+/* ── Page furniture ──────────────────────────────────────────────────────── */
+
+.page-sub {
+  margin: 0 0 var(--s6);
+  font-size: var(--t-sm);
+  color: var(--muted);
+}
+
+.page-note {
+  margin: 0 0 var(--s4);
+  font-size: var(--t-sm);
+  color: var(--subtle);
+}
+
+.page-retry {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s4);
+  align-items: flex-start;
+}
+
+a.btn {
+  text-decoration: none;
+}
+
+/* ── Onboarding ──────────────────────────────────────────────────────────── */
+
+/* The three numbered Cards stack full-width; nothing narrows this form. */
+.onboard-form {
+  display: block;
+}
+
+/* The blood-group grid is src/ui/BloodGroupGrid (folded there at GB-31a — the
+   requester form had built the same grid to the same spec). */
+
+.privacy-note {
+  margin: 0;
+  font-size: var(--t-sm);
+  color: var(--subtle);
+}
+
+.onboard-missing {
+  margin: 0 0 var(--s6);
+  font-size: var(--t-sm);
+  color: var(--subtle);
+}
+
+/* ── Area picker ─────────────────────────────────────────────────────────── */
+
+.picker {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s3);
+}
+
+.picker-actions {
+  display: flex;
+  gap: var(--s2);
+}
+
+.manual-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--s3);
+}
+
+.donor-map {
+  height: 240px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-card);
+}
+
+.picker-state {
+  margin: 0;
+  font-size: var(--t-sm);
+  color: var(--muted);
+}
+
+/* ── Push enrolment ──────────────────────────────────────────────────────── */
+
+.push-title {
+  margin: 0;
+  font-size: var(--t-xl);
+}
+
+.push-steps {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--t-sm);
+  color: var(--muted);
+}
+
+.push-step-n {
+  margin-right: var(--s3);
+  color: var(--subtle);
+  font-variant-numeric: tabular-nums;
+}
+
+.push-wait {
+  margin: 0;
+  font-size: var(--t-sm);
+  color: var(--muted);
+}
+
+.ok-line {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+  margin: 0;
+  font-size: var(--t-sm);
+  color: var(--ok);
+}

@@ -1,0 +1,250 @@
+/* Non-interactive primitives: Card, BloodChip, StatusChip, Banner, Skeleton,
+   EmptyState, StickyBar, ConfirmSheet, StatChip. Semantic tokens only. */
+
+/* ── Card ────────────────────────────────────────────────────────────────── */
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s4);
+  margin: 0 0 var(--s6);
+  padding: var(--s5);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-card);
+}
+
+.card-title {
+  margin: 0;
+  font-size: var(--t-sm);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+
+.card-step {
+  margin-right: var(--s2);
+  color: var(--subtle);
+}
+
+/* ── BloodChip ───────────────────────────────────────────────────────────── */
+
+.blood-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--blood-soft);
+  color: var(--blood);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  border-radius: var(--r-pill);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.blood-chip-sm {
+  padding: var(--s1) var(--s2);
+  font-size: var(--t-sm);
+}
+
+.blood-chip-md {
+  padding: var(--s1) var(--s3);
+  font-size: var(--t-lg);
+}
+
+/* Capped radius, not the pill: at 44px type a 9999px radius stops being a pill
+   and becomes an ellipse with the group floating inside it. */
+.blood-chip-display {
+  padding: var(--s2) var(--s5);
+  border-radius: 20px;
+  font-size: var(--t-display);
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+
+/* ── StatusChip ──────────────────────────────────────────────────────────── */
+
+.status-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s2);
+  padding: var(--s1) var(--s3);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-pill);
+  font-size: var(--t-xs);
+  font-weight: 500;
+  color: var(--muted);
+}
+
+.status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: var(--r-pill);
+  background: var(--subtle);
+}
+
+.status-chip-ok .status-dot {
+  background: var(--ok);
+}
+
+.status-chip-warn .status-dot {
+  background: var(--warn);
+}
+
+.status-chip-blood {
+  color: var(--text);
+}
+
+.status-chip-blood .status-dot {
+  background: var(--blood);
+}
+
+/* ── Banner ──────────────────────────────────────────────────────────────── */
+
+.banner {
+  margin: 0;
+  padding: var(--s3) var(--s4);
+  font-size: var(--t-sm);
+  color: var(--text);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-ctl);
+}
+
+.banner-warn {
+  background: rgba(251, 191, 36, 0.1);
+  border-color: rgba(251, 191, 36, 0.25);
+}
+
+.banner-error {
+  background: var(--blood-soft);
+  border-color: rgba(239, 68, 68, 0.25);
+}
+
+/* ── Skeleton ────────────────────────────────────────────────────────────── */
+
+.skeleton {
+  display: block;
+  background: var(--surface-2);
+  animation: skeleton-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes skeleton-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.45;
+  }
+}
+
+/* ── EmptyState ──────────────────────────────────────────────────────────── */
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s4);
+  padding: var(--s10) var(--s4);
+  text-align: center;
+}
+
+.empty-state-message {
+  margin: 0;
+  font-size: var(--t-base);
+  color: var(--muted);
+}
+
+/* ── StickyBar ───────────────────────────────────────────────────────────── */
+
+.sticky-bar {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 20;
+  padding: var(--s4);
+  padding-bottom: calc(var(--s4) + env(safe-area-inset-bottom, 0px));
+  background: color-mix(in srgb, var(--bg) 92%, transparent);
+  backdrop-filter: blur(12px);
+  border-top: 1px solid var(--border);
+}
+
+.sticky-bar-inner {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s2);
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+.sticky-bar-spacer {
+  height: var(--s16);
+}
+
+/* ── ConfirmSheet (danger-quiet confirm pattern) ─────────────────────────── */
+
+/* Both sides wrote this sheet independently (GB-29 donor, GB-30 requester) to
+   the same DESIGN.md line: title, one-line consequence, ghost cancel + one
+   confirm. One copy now. The actions row wraps because the requester's labels
+   are full sentences and two of them do not fit 390px side by side. */
+
+.confirm-sheet {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s3);
+  padding: var(--s4);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sheet);
+}
+
+.confirm-sheet-title {
+  margin: 0;
+  font-size: var(--t-base);
+  font-weight: 600;
+  color: var(--text);
+}
+
+.confirm-sheet-note {
+  margin: 0;
+  font-size: var(--t-sm);
+  color: var(--muted);
+}
+
+.confirm-sheet-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--s2);
+}
+
+/* ── StatChip ────────────────────────────────────────────────────────────── */
+
+.stat-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s6);
+}
+
+.stat-chip {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s1);
+}
+
+.stat-chip-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--subtle);
+}
+
+.stat-chip-value {
+  font-size: var(--t-xl);
+  font-weight: 600;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}

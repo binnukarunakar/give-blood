@@ -1,0 +1,230 @@
+/* The floating push inbox and the page room it needs (DESIGN.md §  Demo
+   chrome). Imported by demo.css. */
+/* ── Push inbox ──────────────────────────────────────────────────────────── */
+
+/* The inbox pill is fixed, so at the foot of a long page it would sit on top of
+   whatever the last control happens to be — on donor home that was the consent
+   switch. Every demo page therefore ends with pill height (36px) + 16px of dead
+   room, on top of the padding the shell already has. mountDemo sets the class. */
+.demo-mode .app-main {
+  padding-bottom: calc(52px + var(--s4) + env(safe-area-inset-bottom, 0px));
+}
+
+@media (min-width: 768px) {
+  .demo-mode .app-main {
+    padding-bottom: calc(52px + var(--s6) + env(safe-area-inset-bottom, 0px));
+  }
+}
+
+/* --inbox-bottom is how far the collapsed pill sits off the bottom of the
+   viewport. PushInbox overrides it inline to (sticky-bar height + 8px) while a
+   decision bar is on screen, so the pill rides ABOVE the bar and never lands
+   inside it (DESIGN.md — demo chrome may never overlap StickyBar). */
+.demo-inbox {
+  --inbox-bottom: calc(var(--s4) + env(safe-area-inset-bottom, 0px));
+  position: fixed;
+  right: var(--s4);
+  bottom: var(--inbox-bottom);
+  z-index: 25;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  /* The container is a positioning box, not a surface. On a phone it stretches
+     edge to edge and would otherwise eat every tap aimed at the decision bar
+     behind it — the pill and the card take their own clicks back. */
+  pointer-events: none;
+}
+
+/* PushInbox sets [hidden] while a ConfirmSheet is open. The UA's display:none
+   loses to the class rule above, so it is restated here. */
+.demo-inbox[hidden] {
+  display: none;
+}
+
+.inbox-pill,
+.inbox-card {
+  pointer-events: auto;
+}
+
+.inbox-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s2);
+  min-height: 36px;
+  padding: 0 var(--s4);
+  font-size: var(--t-xs);
+  font-weight: 500;
+  color: var(--muted);
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-pill);
+  cursor: pointer;
+  transition:
+    color var(--dur-fast) var(--ease),
+    opacity var(--dur-fast) var(--ease),
+    transform var(--dur-fast) var(--ease);
+}
+
+.inbox-pill:not(:disabled):hover {
+  color: var(--text);
+}
+
+.inbox-pill:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* Geometric avoidance (GB-33b, corrected GB-33c): while the pill's rect covers
+   a control the app owns it climbs out of the way, in 8px steps, up to 40% of
+   the viewport (the transform is set inline by PushInbox). Only when nothing
+   within that reach is clear does it fall back to this ghost, which cannot take
+   the tap. It is never removed — the push inbox is the demo's whole instrument
+   and has to stay findable. After :disabled, so a pill that is both collapsed
+   and covering something reads as covering. */
+.inbox-pill.is-ghost {
+  opacity: 0.35;
+  pointer-events: none;
+}
+
+/* Restates the global kill switch in tokens.css at the call site: the pill
+   changes opacity on scroll, which is exactly the kind of motion a reader who
+   asked for less of it should not get. */
+@media (prefers-reduced-motion: reduce) {
+  .inbox-pill {
+    transition: none;
+  }
+}
+
+.inbox-badge {
+  min-width: 18px;
+  padding: 0 var(--s1);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  color: var(--accent-text);
+  background: var(--accent);
+  border-radius: var(--r-pill);
+}
+
+.inbox-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s3);
+  width: 320px;
+  max-width: calc(100vw - var(--s8));
+  max-height: 60vh;
+  padding: var(--s4);
+  background: color-mix(in srgb, var(--surface) 96%, transparent);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-card);
+}
+
+.inbox-head {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s2);
+}
+
+.inbox-title {
+  flex: 1;
+  margin: 0;
+  font-size: var(--t-sm);
+  color: var(--muted);
+}
+
+.inbox-head .btn {
+  flex: none;
+  min-height: 24px;
+  padding: 0;
+}
+
+.inbox-note,
+.inbox-error {
+  margin: 0;
+  font-size: var(--t-xs);
+  color: var(--subtle);
+}
+
+.inbox-error {
+  color: var(--danger);
+}
+
+.inbox-rows {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  gap: var(--s2);
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.inbox-row {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s1);
+  padding-top: var(--s2);
+  border-top: 1px solid var(--border);
+}
+
+.inbox-row:first-child {
+  padding-top: 0;
+  border-top: none;
+}
+
+.inbox-row-head {
+  display: flex;
+  align-items: baseline;
+  gap: var(--s2);
+  font-size: var(--t-xs);
+  color: var(--subtle);
+}
+
+.inbox-type {
+  font-weight: 500;
+  color: var(--muted);
+}
+
+.inbox-open {
+  margin-left: auto;
+  color: var(--text);
+}
+
+.inbox-payload,
+.inbox-type,
+.inbox-time {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.inbox-payload {
+  font-size: var(--t-xs);
+  color: var(--muted);
+  word-break: break-all;
+}
+
+/* Phone: a bottom sheet, with the pill still tucked to the right edge. The
+   container goes flush to the bottom so the sheet is a sheet; the pill keeps
+   the same clearance as on a desktop by taking it as a margin instead. */
+@media (max-width: 480px) {
+  .demo-inbox {
+    right: 0;
+    bottom: 0;
+    left: 0;
+    align-items: stretch;
+  }
+
+  .inbox-pill {
+    margin: 0 var(--s4) var(--inbox-bottom) auto;
+  }
+
+  .inbox-card {
+    width: auto;
+    max-width: none;
+    border-width: 1px 0 0;
+    border-radius: var(--r-sheet) var(--r-sheet) 0 0;
+    padding-bottom: calc(var(--s4) + env(safe-area-inset-bottom, 0px));
+  }
+}

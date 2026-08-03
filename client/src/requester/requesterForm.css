@@ -1,0 +1,53 @@
+/* The new-request form's layout and its units stepper. Split out of
+   requester.css only to keep each file under the 300-line cap, the same way
+   src/ui/ui.css splits controls from surfaces. Imported by requester.css.
+
+   The blood-group grid is src/ui/BloodGroupGrid: this file and GB-29's donor
+   onboarding.css had each written the same grid to the same spec, and GB-31a
+   folded the pair into the UI kit. */
+
+.request-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s4);
+}
+
+.picker {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s3);
+}
+
+.picker-label {
+  margin: 0;
+  font-size: var(--t-sm);
+  font-weight: 500;
+  color: var(--text);
+}
+
+.form-note {
+  margin: 0;
+  font-size: var(--t-sm);
+  color: var(--subtle);
+}
+
+.units-stepper {
+  display: flex;
+  align-items: center;
+  gap: var(--s4);
+}
+
+.units-stepper .btn {
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0;
+  font-size: var(--t-lg);
+}
+
+.units-count {
+  min-width: var(--s6);
+  font-size: var(--t-xl);
+  font-weight: 600;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}

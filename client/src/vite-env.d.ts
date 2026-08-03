@@ -1,0 +1,18 @@
+/// <reference types="vite/client" />
+
+interface ImportMetaEnv {
+  readonly VITE_FIREBASE_API_KEY?: string;
+  readonly VITE_FIREBASE_AUTH_DOMAIN?: string;
+  readonly VITE_FIREBASE_PROJECT_ID?: string;
+  readonly VITE_FIREBASE_APP_ID?: string;
+  readonly VITE_FIREBASE_MESSAGING_SENDER_ID?: string;
+  readonly VITE_FCM_VAPID_PUBLIC_KEY?: string;
+  readonly VITE_MAPS_BROWSER_KEY?: string;
+  readonly VITE_API_BASE_URL?: string;
+  /** '1' builds the local click-through demo (src/demo). Unset everywhere else. */
+  readonly VITE_DEMO_MODE?: string;
+}
+
+interface ImportMeta {
+  readonly env: ImportMetaEnv;
+}

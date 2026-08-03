@@ -1,0 +1,110 @@
+/* The demo persona strip (DESIGN.md §  Demo chrome). Imported by demo.css. */
+/* ── Persona strip ───────────────────────────────────────────────────────── */
+
+.demo-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s1) var(--s3);
+  /* 52px, not the 40px DESIGN.md § Demo chrome specifies: the persona pills are
+     the primary control of the whole demo and were 28px, under the 44px touch
+     minimum, on the one device the demo is shown on. Declared deviation
+     (GB-33); the 44px floor wins over the strip height. */
+  min-height: 52px;
+  padding: var(--s1) var(--s4);
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+
+.demo-tag {
+  font-size: var(--t-xs);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--subtle);
+}
+
+/* Scrolls rather than wraps: four persona labels do not fit 390px, and a
+   three-row strip would push the app below the fold on a phone.
+
+   The fade is the cue that there is more to the right — without it the strip
+   ended mid-word at "Meera (A+ dono" and City Hospital, the persona that raises
+   every request, read as missing rather than as off-screen (GB-33).
+
+   It is a mask, not a painted gradient: nothing is added to the design, pixels
+   are removed from it, which is why this does not read against the no-gradients
+   rule. It is also self-hiding — the strip takes the row's leftover width
+   (`flex: 1 1 auto`), so when all four pills fit, the faded 24px falls on empty
+   space and nothing dims. */
+.demo-personas {
+  display: flex;
+  flex: 1 1 auto;
+  gap: var(--s2);
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: auto;
+  scrollbar-width: none;
+  mask-image: linear-gradient(to right, #000 calc(100% - 24px), transparent 100%);
+}
+
+.demo-personas::-webkit-scrollbar {
+  display: none;
+}
+
+.demo-bar button.demo-pill {
+  display: inline-flex;
+  align-items: center;
+  /* 44px touch minimum (DESIGN.md § Global), which the demo chrome used to be
+     exempt from. These are the demo's main control; they are not exempt. */
+  min-height: 44px;
+  padding: 0 var(--s3);
+  font-size: var(--t-xs);
+  font-weight: 500;
+  white-space: nowrap;
+  color: var(--muted);
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--r-pill);
+  cursor: pointer;
+  transition:
+    color var(--dur-fast) var(--ease),
+    border-color var(--dur-fast) var(--ease);
+}
+
+.demo-bar button.demo-pill:hover {
+  color: var(--text);
+}
+
+.demo-bar button.demo-pill[aria-pressed='true'] {
+  color: var(--accent);
+  border-color: var(--border-strong);
+}
+
+/* One status line, truncated rather than wrapped: the strip stays 40px on a
+   desktop and drops to its own row only when the pills have taken the width. */
+.demo-note {
+  flex: 1 1 12rem;
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+  font-size: var(--t-xs);
+  color: var(--subtle);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.demo-note-error {
+  color: var(--danger);
+}
+
+.demo-actions {
+  display: flex;
+  gap: var(--s1);
+  margin-left: auto;
+}
+
+.demo-actions .btn {
+  min-height: 28px;
+  padding: 0 var(--s2);
+  font-size: var(--t-xs);
+}

@@ -1,0 +1,27 @@
+/* Donor-screen styles (GB-29, docs/DESIGN.md § Screens). One entry point,
+   imported once from src/donor/index.ts, split by screen only to keep each
+   file under the 300-line cap. Semantic tokens only.
+
+   The skeleton shells below are shared by both donor pages, so they stay here. */
+@import './onboarding.css';
+@import './donorHome.css';
+@import './alertDetail.css';
+
+/* ── Skeletons (shaped like the layout they replace) ─────────────────────── */
+
+.skeleton-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s3);
+  margin: 0 0 var(--s6);
+  padding: var(--s5);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-card);
+}
+
+.skeleton-row {
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+}

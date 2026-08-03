@@ -1,0 +1,120 @@
+/* Design tokens + global rules (GB-28, docs/DESIGN.md).
+   Clinical dark: near-black surfaces, quiet borders, white primary actions.
+   Red is semantic only — blood group, critical urgency, destructive intent.
+   Components read ONLY the semantic tokens; primitives below the divider are
+   never referenced outside this file. A light theme is one [data-theme] block. */
+:root {
+  color-scheme: dark;
+  /* primitives */
+  --zinc-950:#09090b; --zinc-900:#18181b; --zinc-850:#1f1f23;
+  --zinc-800:#27272a; --zinc-700:#3f3f46; --zinc-500:#71717a;
+  /* Off-scale on purpose (GB-33): --subtle is 13px body copy — helper text,
+     the request footer, the demo status line — and zinc-500 measured 4.12:1 on
+     --bg, under the 4.5:1 floor. 4.5:1 on --bg lands near #797982; this is
+     lifted past it so the same token also clears 4.5:1 on --surface (5.25:1)
+     and --surface-2 (4.86:1), the two places 13px --subtle also sits. */
+  --zinc-450:#8b8b94;
+  --zinc-400:#a1a1aa; --zinc-200:#e4e4e7; --zinc-50:#fafafa;
+  --red-500:#ef4444; --red-400:#f87171; --red-950:#450a0a;
+  --green-400:#4ade80; --amber-400:#fbbf24;
+  /* semantic — components use ONLY these */
+  --bg:var(--zinc-950); --surface:var(--zinc-900); --surface-2:var(--zinc-850);
+  --border:rgba(255,255,255,0.08); --border-strong:rgba(255,255,255,0.14);
+  --text:var(--zinc-50); --muted:var(--zinc-400); --subtle:var(--zinc-450);
+  --accent:#ffffff; --accent-text:var(--zinc-950);
+  --blood:var(--red-500); --blood-soft:rgba(239,68,68,0.12);
+  --ok:var(--green-400); --warn:var(--amber-400); --danger:var(--red-400);
+  /* spacing (4-grid) */
+  --s1:4px; --s2:8px; --s3:12px; --s4:16px; --s5:20px; --s6:24px;
+  --s8:32px; --s10:40px; --s12:48px; --s16:64px;
+  /* type */
+  --t-xs:12px; --t-sm:13px; --t-base:15px; --t-lg:17px; --t-xl:20px;
+  --t-2xl:24px; --t-3xl:32px; --t-display:44px;
+  /* radius: controls 8, cards 12, sheets 16, pills 9999 */
+  --r-ctl:8px; --r-card:12px; --r-sheet:16px; --r-pill:9999px;
+  /* motion */
+  --ease:cubic-bezier(0.16,1,0.3,1); --dur-fast:150ms; --dur:250ms;
+
+  --font: -apple-system, system-ui, 'Segoe UI', Roboto, Inter, sans-serif;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: var(--t-base);
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  margin: 0;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.25;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+/* Links carry the app's own text colour, never the browser's blue-then-purple.
+   The underline is the affordance and it is quiet: a --muted rule under --text
+   copy. Visited reads identically — where a donor has already been is not
+   information this app should paint.
+
+   `:where(:visited)` rather than `a:visited`: the pseudo-class would otherwise
+   raise this rule to class-level specificity and beat every link that borrows a
+   component look (.btn, .req-link, .app-nav a), turning a white primary button
+   into white-on-white the moment it had been visited. Inside :where() it
+   contributes nothing, so any class still wins. */
+a {
+  color: var(--text);
+  text-decoration: underline;
+  text-decoration-color: var(--muted);
+  text-underline-offset: 2px;
+}
+
+a:where(:visited) {
+  color: var(--text);
+}
+
+a:where(:hover) {
+  text-decoration-color: var(--text);
+}
+
+/* Never removed. The ring is the only outline this app draws. */
+:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.4);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

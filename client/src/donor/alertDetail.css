@@ -1,0 +1,117 @@
+/* Alert detail (GB-29, docs/DESIGN.md § Screens): the one screen the whole
+   product turns on.
+   Semantic tokens only — no raw colours, no values off the 4-grid. Anything
+   reusable belongs in src/ui, not here. Loaded via ./donor.css. */
+
+/* ── Alert detail ────────────────────────────────────────────────────────── */
+
+.alert-head {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s4);
+  margin-bottom: var(--s6);
+}
+
+.alert-status-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s3);
+}
+
+.alert-expires {
+  font-size: var(--t-sm);
+  color: var(--muted);
+}
+
+.alert-need {
+  display: flex;
+  align-items: center;
+  gap: var(--s4);
+  margin: 0;
+}
+
+.alert-units {
+  font-size: var(--t-lg);
+  font-weight: 500;
+  color: var(--muted);
+}
+
+.hospital-block {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s2);
+}
+
+.hospital-name {
+  margin: 0;
+  font-size: var(--t-lg);
+  font-weight: 600;
+  color: var(--text);
+}
+
+.hospital-address,
+.hospital-distance {
+  margin: 0;
+  font-size: var(--t-sm);
+  color: var(--muted);
+}
+
+.hospital-distance {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+}
+
+.accept-expand {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s2);
+  margin-bottom: var(--s2);
+}
+
+.accept-hint {
+  margin: 0;
+  font-size: var(--t-sm);
+  color: var(--muted);
+}
+
+.pledge-line {
+  margin: 0;
+  font-size: var(--t-base);
+  color: var(--muted);
+}
+
+.pledge-units {
+  font-size: var(--t-sm);
+  color: var(--muted);
+}
+
+.pledge-withdraw {
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* Closed, declined, withdrawn: nothing to decide, so nothing competes. */
+.alert-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s3);
+  padding: var(--s16) var(--s4);
+  text-align: center;
+}
+
+.alert-state-title {
+  margin: 0;
+  font-size: var(--t-xl);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--text);
+}
+
+.alert-state-note {
+  margin: 0;
+  font-size: var(--t-base);
+  color: var(--muted);
+}

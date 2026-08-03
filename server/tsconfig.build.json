@@ -1,0 +1,7 @@
+// Emit config only. `npm run build` uses this so dist/ carries production code
+// alone — no tests, no src/demo. `npm run typecheck` stays on tsconfig.json,
+// which still includes both, so demo and test files are type-checked in CI.
+{
+  "extends": "./tsconfig.json",
+  "exclude": ["src/**/*.test.ts", "src/demo"]
+}

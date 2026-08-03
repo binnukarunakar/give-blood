@@ -1,0 +1,311 @@
+/* Interactive primitives: Button, Field, Switch, SegmentedControl,
+   BloodGroupGrid.
+   Semantic tokens only — the two exceptions are the values DESIGN.md's own
+   component specs name by hand (--zinc-200 hovers, --zinc-700 switch track). */
+
+/* ── Button ──────────────────────────────────────────────────────────────── */
+
+.btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s2);
+  min-height: 40px;
+  padding: 0 var(--s4);
+  font-size: var(--t-base);
+  font-weight: 500;
+  white-space: nowrap;
+  border: 1px solid transparent;
+  border-radius: var(--r-ctl);
+  cursor: pointer;
+  /* Several buttons are <a> (Directions, tel:, Back): the global link underline
+     is for prose, not for a control that already reads as a control. */
+  text-decoration: none;
+  transition:
+    background-color var(--dur-fast) var(--ease),
+    border-color var(--dur-fast) var(--ease),
+    color var(--dur-fast) var(--ease),
+    transform var(--dur-fast) var(--ease);
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.btn:not(:disabled):active {
+  transform: scale(0.98);
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: var(--accent-text);
+}
+
+.btn-primary:not(:disabled):hover {
+  background: var(--zinc-200);
+}
+
+/* A half-opacity white slab is still a slab: on the new-request form it was the
+   loudest thing on screen while being the one thing you cannot press. A
+   disabled primary drops to a quiet surface instead of a dimmed one. */
+.btn-primary:disabled:not(.is-loading) {
+  opacity: 1;
+  background: var(--surface-2);
+  border-color: var(--border);
+  color: var(--subtle);
+}
+
+.btn-secondary {
+  background: var(--surface-2);
+  border-color: var(--border-strong);
+  color: var(--text);
+}
+
+.btn-secondary:not(:disabled):hover {
+  background: var(--zinc-800);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--muted);
+}
+
+.btn-ghost:not(:disabled):hover {
+  color: var(--text);
+}
+
+.btn-danger {
+  background: transparent;
+  color: var(--danger);
+  border-color: rgba(248, 113, 113, 0.25);
+}
+
+.btn-danger:not(:disabled):hover {
+  border-color: var(--danger);
+}
+
+.btn-lg {
+  min-height: 48px;
+  font-size: var(--t-lg);
+  font-weight: 600;
+}
+
+.btn-full {
+  width: 100%;
+}
+
+.btn.is-loading .btn-label {
+  visibility: hidden;
+}
+
+.btn-spinner {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  border-radius: var(--r-pill);
+  animation: spin 700ms linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ── Field ───────────────────────────────────────────────────────────────── */
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s2);
+}
+
+.field-label {
+  font-size: var(--t-sm);
+  font-weight: 500;
+  color: var(--text);
+}
+
+.field-input {
+  width: 100%;
+  min-height: 44px;
+  padding: 0 var(--s3);
+  background: var(--surface-2);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-ctl);
+  color: var(--text);
+}
+
+.field-input::placeholder {
+  color: var(--subtle);
+}
+
+.field-invalid .field-input {
+  border-color: var(--danger);
+}
+
+.field-note {
+  margin: 0;
+  font-size: var(--t-sm);
+  color: var(--subtle);
+}
+
+.field-error {
+  color: var(--danger);
+}
+
+/* ── Switch ──────────────────────────────────────────────────────────────── */
+
+.switch-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s4);
+  min-height: 44px;
+}
+
+.switch-text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s1);
+}
+
+.switch-label {
+  font-size: var(--t-base);
+  color: var(--text);
+}
+
+.switch-desc {
+  font-size: var(--t-sm);
+  color: var(--muted);
+}
+
+/* 40x24 is the whole spec (DESIGN.md § Switch), so the track states its size
+   twice: `height` alone loses to any `min-height` an element-level rule sets,
+   and one did — the GB-28 bridge stylesheet's `button { min-height: 40px }`
+   silently made every switch a 40x40 square until GB-31a. */
+.switch {
+  flex: none;
+  display: flex;
+  align-items: center;
+  width: 40px;
+  height: 24px;
+  min-height: 24px;
+  padding: 2px;
+  background: var(--zinc-700);
+  border: none;
+  border-radius: var(--r-pill);
+  cursor: pointer;
+  transition: background-color var(--dur-fast) var(--ease);
+}
+
+.switch:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.switch[aria-checked='true'] {
+  background: var(--accent);
+}
+
+.switch-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: var(--r-pill);
+  background: var(--zinc-200);
+  transition:
+    transform var(--dur-fast) var(--ease),
+    background-color var(--dur-fast) var(--ease);
+}
+
+.switch[aria-checked='true'] .switch-thumb {
+  transform: translateX(16px);
+  background: var(--accent-text);
+}
+
+/* ── SegmentedControl ────────────────────────────────────────────────────── */
+
+.segmented {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  gap: var(--s1);
+  padding: var(--s1);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-ctl);
+}
+
+.segment {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s2);
+  min-height: 36px;
+  padding: 0 var(--s3);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--s1);
+  color: var(--muted);
+  font-size: var(--t-sm);
+  font-weight: 500;
+  cursor: pointer;
+  transition:
+    background-color var(--dur-fast) var(--ease),
+    color var(--dur-fast) var(--ease);
+}
+
+.segment.is-selected {
+  background: var(--surface);
+  border-color: var(--border-strong);
+  color: var(--text);
+}
+
+.segment-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: var(--r-pill);
+  background: var(--blood);
+}
+
+/* ── BloodGroupGrid ──────────────────────────────────────────────────────── */
+
+/* Donor onboarding and the requester's new-request form landed on the same
+   8-tile grid, to the same spec, in two stylesheets (GB-29, GB-30). One copy
+   now, here (DESIGN.md § Donor onboarding: 8 tiles 2x4, 56px, selected =
+   --blood border + --blood-soft). */
+
+.blood-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--s2);
+}
+
+.blood-tile {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 56px;
+  padding: 0;
+  font-size: var(--t-lg);
+  font-weight: 600;
+  color: var(--text);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-ctl);
+  cursor: pointer;
+  transition:
+    background-color var(--dur-fast) var(--ease),
+    border-color var(--dur-fast) var(--ease),
+    color var(--dur-fast) var(--ease);
+}
+
+.blood-tile[aria-pressed='true'] {
+  color: var(--blood);
+  background: var(--blood-soft);
+  border-color: var(--blood);
+}

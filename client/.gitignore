@@ -1,0 +1,13 @@
+node_modules
+dist
+# scratch outDir for verify:no-demo; the script removes it, this covers a crash
+dist-verify
+dev-dist
+coverage
+# review screenshots (scripts/shoot.mjs) — regenerated on demand, never committed
+screenshots
+.env
+.env.*
+!.env.example
+*.local
+.DS_Store
