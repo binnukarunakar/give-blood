@@ -86,6 +86,7 @@ describe('Onboarding', () => {
         bloodGroup: 'O-',
         geohash5: TIMES_SQUARE_CELL,
         consent: true,
+        travelRadiusKm: 25, // widest rung by default (GB-35)
       });
     });
     expect(await screen.findByRole('heading', { name: PUSH_TITLE })).toBeInTheDocument();
@@ -124,6 +125,22 @@ describe('Onboarding', () => {
 
     await user.click(screen.getByLabelText(/send me alerts/i));
     expect(screen.getByRole('button', { name: 'Create donor profile' })).toBeEnabled();
+  });
+
+  it('submits the donor-chosen travel radius when it is narrowed (GB-35)', async () => {
+    const user = userEvent.setup();
+    render(<Onboarding onComplete={vi.fn()} />);
+
+    await fillForm();
+    await user.click(screen.getByRole('button', { name: '5 km' }));
+    await user.click(screen.getByLabelText(/send me alerts/i));
+    await user.click(screen.getByRole('button', { name: 'Create donor profile' }));
+
+    await waitFor(() => {
+      expect(apiMock.registerDonor).toHaveBeenCalledWith(
+        expect.objectContaining({ travelRadiusKm: 5 }),
+      );
+    });
   });
 
   it('completes push setup: token saved, then verification confirmed', async () => {

@@ -30,6 +30,7 @@ Two structural invariants:
 | handle | text | private → requester-visible on accept | mutable | display name; pseudonym allowed |
 | blood_group | enum(8) | private → requester-visible on accept | mutable, locked while a pledge is active | self-reported; hospital cross-matches at the bench regardless |
 | geohash5 | char(5) | private | mutable | the ONLY location field |
+| travel_radius_km | smallint | private | mutable | how far the donor will travel: 5 / 10 / 25 (`CHECK`), default **25** |
 | tz | text | private | derived from geohash5 at write | makes donor-local quiet hours computable |
 | phone (`DONOR_PHONE`) | text | private | mutable | OTP identity; revealed post-accept iff `share_phone_on_accept` |
 | push_token | text? | private | mutable | delivery address, never displayed; **null until the browser grants push permission** (donor row exists first: register → permission → token → verification push) |
@@ -162,6 +163,7 @@ eligible(D, R, T) :=
        OR now - D.last_donation_at >= 56 days)        -- whole-blood cooldown
   AND D.blood_group IN COMPAT[R.blood_group]
   AND D.geohash5 IN cover(R.hospital, radius[T])
+  AND D.travel_radius_km >= dist(R.hospital, nearest_point(D.geohash5))  -- donor's own limit
   AND quiet_hours_pass(D, R)     -- 22:00–07:00 donor-local; critical pierces
   AND NOT EXISTS active pledge for D                   -- one body, one unit
   AND NOT EXISTS dispatch(R, D)                        -- never re-page per request
@@ -170,6 +172,43 @@ eligible(D, R, T) :=
 Resolves against one composite partial index —
 `(blood_group, geohash5) WHERE opted_in AND available AND push_verified_at IS NOT NULL`
 — plus two anti-joins. No PostGIS, no search engine.
+
+**Travel radius (GB-35).** `cover(...)` and the per-cell distance are produced
+together by `coverCellsWithDistance`, passed as two parallel array parameters,
+and paired by `unnest` in the one statement — so the donor's own "how far will
+you travel?" is compared against how far away they actually are.
+
+The two clauses do different jobs and both are needed:
+
+| Clause | Owner | Question it answers |
+|---|---|---|
+| `geohash5 IN cover(hospital, radius[T])` | the request | Has escalation reached this donor yet? |
+| `travel_radius_km >= dist(...)` | the donor | Could this donor be inside the distance they agreed to? |
+
+The consequence is the behaviour the feature exists for: a donor 18 km out who
+is willing to travel 25 km is invisible at tiers 0 and 1 and only becomes
+alertable at tier 2, which the sweep only reaches when the nearer tiers failed
+to fill the request. Nobody is paged for a hospital they already said is too
+far, and nobody far away is paged while a closer donor could still answer.
+
+**Which distance.** The comparison uses the distance to the cell's NEAREST
+POINT, not its centroid — the smallest distance any donor in that cell can
+possibly be from the hospital. A precision-5 cell is ~4.9 km across, so a donor
+sits up to ~3.46 km either side of its centroid, and gating on the centroid
+excluded donors who were inside the range they had agreed to: a cell centred
+5.04 km out can hold a donor 2.59 km from the hospital, and a "5 km" donor there
+was never alerted. Gating on the nearest point asks the only question the data
+can answer — *could* this donor be within the distance they agreed to? — so it
+excludes only donors who certainly are not.
+
+The bias is deliberate and matches the one `cover(...)` itself is built around:
+over-include and let the donor decline, never silently drop someone who would
+have come. A false inclusion costs one tap; a false exclusion means a willing
+donor minutes away never learns that someone needed blood.
+
+The residual ~±3.46 km spread is also why the choice is a 5/10/25 ladder
+matching `RADIUS_TIERS_KM` (DB `CHECK`), not a free-form slider: a finer control
+would imply a precision the stored location does not have.
 
 ## Geo-indexing
 

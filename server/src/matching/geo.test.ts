@@ -2,6 +2,7 @@ import ngeohash from 'ngeohash';
 import { describe, expect, test } from 'vitest';
 import {
   coverCells,
+  coverCellsWithDistance,
   GEOHASH_PRECISION,
   haversineKm,
   RADIUS_TIERS_KM,
@@ -100,6 +101,52 @@ describe('coverCells — no runaway over-inclusion / no under-cover', () => {
     const nearCell = ngeohash.encode(nearLat, lng, GEOHASH_PRECISION);
     expect(haversineKm(lat, lng, nearLat, lng)).toBeLessThan(5);
     expect(coverCells(lat, lng, 5)).toContain(nearCell);
+  });
+});
+
+describe('coverCellsWithDistance — nearestKm is the per-cell floor', () => {
+  const { lat, lng } = PLACES[0]; // Manhattan
+
+  test('nearestKm never exceeds the centroid distance', () => {
+    for (const radius of RADIUS_TIERS_KM) {
+      for (const c of coverCellsWithDistance(lat, lng, radius)) {
+        expect(c.nearestKm).toBeLessThanOrEqual(c.distanceKm + 1e-9);
+      }
+    }
+  });
+
+  test('the query point sits inside its own cell, so that cell has nearestKm 0', () => {
+    const own = ngeohash.encode(lat, lng, GEOHASH_PRECISION);
+    const cell = coverCellsWithDistance(lat, lng, 5).find((c) => c.cell === own);
+    expect(cell).toBeDefined();
+    expect(cell?.nearestKm).toBeCloseTo(0, 6);
+  });
+
+  test('no donor in a cell can be closer than its nearestKm', () => {
+    // Sample the cell's corners and centre; every one must be at least nearestKm out.
+    for (const c of coverCellsWithDistance(lat, lng, 10)) {
+      const [minLat, minLng, maxLat, maxLng] = ngeohash.decode_bbox(c.cell);
+      const corners: [number, number][] = [
+        [minLat, minLng],
+        [minLat, maxLng],
+        [maxLat, minLng],
+        [maxLat, maxLng],
+        [(minLat + maxLat) / 2, (minLng + maxLng) / 2],
+      ];
+      for (const [pLat, pLng] of corners) {
+        expect(haversineKm(lat, lng, pLat, pLng)).toBeGreaterThanOrEqual(c.nearestKm - 1e-6);
+      }
+    }
+  });
+
+  test('a cell exists whose centroid is past 5 km while its nearest point is not', () => {
+    // The GB-35 failure shape: gating a "5 km" donor on the centroid would drop
+    // them even though they can be well inside 5 km. Guards the reason the
+    // nearest-point distance exists at all.
+    const straddling = coverCellsWithDistance(lat, lng, 10).filter(
+      (c) => c.distanceKm > 5 && c.nearestKm < 5,
+    );
+    expect(straddling.length).toBeGreaterThan(0);
   });
 });
 

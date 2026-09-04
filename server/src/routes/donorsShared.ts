@@ -10,12 +10,28 @@
 import { z } from 'zod';
 import type { RequestState } from '../domain/requestFsm.js';
 import { BLOOD_GROUPS, type BloodGroup } from '../matching/compatibility.js';
+import { TRAVEL_RADII_KM, type TravelRadiusKm } from '../matching/geo.js';
 
 /** handle is 1..40 chars; the display name / pseudonym (DATA_MODEL: Donor.handle). */
 const HANDLE_MIN = 1;
 const HANDLE_MAX = 40;
 const handleSchema = z.string().min(HANDLE_MIN).max(HANDLE_MAX);
 const bloodGroupSchema = z.enum(BLOOD_GROUPS);
+
+/**
+ * "How far will you travel?" — one of the RADIUS_TIERS_KM rungs (GB-35). Mirrors
+ * the DB CHECK, so a bad value is a 400 here rather than a 23514 from Postgres.
+ */
+const travelRadiusSchema = z.union(
+  TRAVEL_RADII_KM.map((km) => z.literal(km)) as [
+    z.ZodLiteral<TravelRadiusKm>,
+    z.ZodLiteral<TravelRadiusKm>,
+    ...z.ZodLiteral<TravelRadiusKm>[],
+  ],
+);
+
+/** Widest rung: the pre-GB-35 behaviour, and the migration's column default. */
+export const DEFAULT_TRAVEL_RADIUS_KM: TravelRadiusKm = 25;
 
 // POST /donors body. `consent` is the opted_in gate made explicit — it must be
 // the literal `true` (DATA_MODEL: consent has exactly one owner, the donor; no
@@ -25,6 +41,8 @@ export const registerSchema = z.object({
   bloodGroup: bloodGroupSchema,
   geohash5: z.string(),
   consent: z.literal(true),
+  // Optional: an older client that does not send it keeps the widest reach.
+  travelRadiusKm: travelRadiusSchema.optional(),
 });
 export type RegisterInput = z.infer<typeof registerSchema>;
 
@@ -40,6 +58,7 @@ export const patchSchema = z.object({
   sharePhoneOnAccept: z.boolean().optional(),
   geohash5: z.string().optional(),
   bloodGroup: bloodGroupSchema.optional(),
+  travelRadiusKm: travelRadiusSchema.optional(),
 });
 export type PatchInput = z.infer<typeof patchSchema>;
 
@@ -62,7 +81,8 @@ export function summarizeIssues(error: z.ZodError): { path: string; message: str
 // push_token and firebase_uid are deliberately absent.
 export const DONOR_VIEW_COLUMNS = `
   donor_id, handle, blood_group, geohash5, tz, opted_in, available,
-  snooze_until, share_phone_on_accept, push_verified_at, last_donation_at
+  snooze_until, share_phone_on_accept, push_verified_at, last_donation_at,
+  travel_radius_km
 `;
 
 export interface DonorViewRow {
@@ -77,6 +97,8 @@ export interface DonorViewRow {
   share_phone_on_accept: boolean;
   push_verified_at: Date | null;
   last_donation_at: Date | null;
+  /** smallint — pg may hand this back as a string depending on the driver. */
+  travel_radius_km: number | string;
 }
 
 export interface DonorView {
@@ -91,6 +113,7 @@ export interface DonorView {
   sharePhoneOnAccept: boolean;
   pushVerified: boolean;
   lastDonationAt: string | null;
+  travelRadiusKm: TravelRadiusKm;
 }
 
 /**
@@ -111,7 +134,21 @@ export function toDonorView(row: DonorViewRow): DonorView {
     sharePhoneOnAccept: row.share_phone_on_accept,
     pushVerified: row.push_verified_at !== null,
     lastDonationAt: row.last_donation_at === null ? null : row.last_donation_at.toISOString(),
+    travelRadiusKm: toTravelRadius(row.travel_radius_km),
   };
+}
+
+/**
+ * Narrow the smallint column back onto the ladder. The DB CHECK already
+ * guarantees membership, so an off-ladder value means the constraint was
+ * dropped or the column was written around; fall back to the widest rung rather
+ * than emitting a value the client's type does not admit.
+ */
+function toTravelRadius(value: number | string): TravelRadiusKm {
+  const n = typeof value === 'string' ? Number.parseInt(value, 10) : value;
+  return TRAVEL_RADII_KM.includes(n as TravelRadiusKm)
+    ? (n as TravelRadiusKm)
+    : DEFAULT_TRAVEL_RADIUS_KM;
 }
 
 // The caller's one ACTIVE pledge, with the dispatch id needed to reopen the
@@ -181,6 +218,7 @@ export function buildDonorUpdate(
   if (patch.sharePhoneOnAccept !== undefined)
     set('share_phone_on_accept = ?', patch.sharePhoneOnAccept);
   if (patch.bloodGroup !== undefined) set('blood_group = ?::blood_group', patch.bloodGroup);
+  if (patch.travelRadiusKm !== undefined) set('travel_radius_km = ?::smallint', patch.travelRadiusKm);
   if (patch.geohash5 !== undefined) {
     set('geohash5 = ?', patch.geohash5);
     // derivedTz is guaranteed present when geohash5 is (caller derives it first).

@@ -15,6 +15,42 @@ import tzLookup from 'tz-lookup';
 export const GEOHASH_PRECISION = 5;
 export const RADIUS_TIERS_KM = [5, 10, 25] as const;
 
+/**
+ * What a donor may choose as "how far I will travel" (GB-35). Deliberately the
+ * same ladder as RADIUS_TIERS_KM: the donor's answer is compared against the
+ * distance to their cell, and the request's tier controls WHEN a farther donor
+ * becomes reachable, so keeping one set of numbers keeps both legible.
+ */
+export const TRAVEL_RADII_KM = RADIUS_TIERS_KM;
+export type TravelRadiusKm = (typeof TRAVEL_RADII_KM)[number];
+
+export function isTravelRadiusKm(value: unknown): value is TravelRadiusKm {
+  return TRAVEL_RADII_KM.includes(value as TravelRadiusKm);
+}
+
+/** A cover cell with its distance from the hospital, centroid and nearest-point. */
+export interface CoverCell {
+  cell: string;
+  /** Centroid distance in km. Coarse by construction: the cell is ~4.9 km across. */
+  distanceKm: number;
+  /**
+   * Distance in km from the hospital to the NEAREST point of the cell — i.e. the
+   * smallest distance any donor in this cell can possibly be from the hospital.
+   *
+   * This, not `distanceKm`, is what a donor's chosen travel radius is compared
+   * against (GB-35). Gating on the centroid silently excluded willing donors: a
+   * cell whose centroid is 7.46 km out can hold a donor 4.46 km from the
+   * hospital, so a donor who answered "I will travel 5 km" was never alerted
+   * even though they were well inside their own stated range. Gating on the
+   * nearest point asks the answerable question — COULD this donor be within the
+   * distance they agreed to? — and so excludes only donors who certainly are
+   * not. It keeps the same bias the cover itself is built around (see
+   * `coverCells`): over-include and let the donor decline, never silently drop
+   * someone who would have come.
+   */
+  nearestKm: number;
+}
+
 // Precision-5 geohash = 25 bits, split 13 longitude / 12 latitude. So a cell
 // spans 360/2^13 deg in longitude and 180/2^12 deg in latitude.
 const GEOHASH5_LAT_BITS = 12;
@@ -85,6 +121,21 @@ export function haversineKm(lat1: number, lng1: number, lat2: number, lng2: numb
 }
 
 /**
+ * Distance in km from (lat, lng) to the nearest point of `cell`'s bounding box.
+ * Zero when the point is inside the cell.
+ *
+ * The cell is a lat/lng rectangle, so the nearest point is found by clamping
+ * each coordinate into the cell's range. At a ~4.9 km cell size the difference
+ * between that and the true great-circle nearest point is sub-metre.
+ */
+function nearestPointKm(lat: number, lng: number, cell: string): number {
+  const [minLat, minLng, maxLat, maxLng] = ngeohash.decode_bbox(cell);
+  const nLat = Math.min(Math.max(lat, minLat), maxLat);
+  const nLng = Math.min(Math.max(lng, minLng), maxLng);
+  return distanceKm(lat, lng, nLat, nLng);
+}
+
+/**
  * All precision-5 geohash cells intersecting the circle of `radiusKm` around
  * (lat, lng).
  *
@@ -98,6 +149,29 @@ export function haversineKm(lat1: number, lng1: number, lat2: number, lng2: numb
  * downstream, which is safe.
  */
 export function coverCells(lat: number, lng: number, radiusKm: number): string[] {
+  return coverCellsWithDistance(lat, lng, radiusKm).map((c) => c.cell);
+}
+
+/**
+ * `coverCells` plus, for each cell, its centroid distance from (lat, lng) and
+ * the distance to its nearest point.
+ *
+ * Both are computed here — once, beside the cover — rather than re-derived by
+ * the caller. They answer different questions and are not interchangeable:
+ *
+ *   distanceKm  centroid: a single representative number for the cell. Coarse
+ *               by construction — a donor anywhere in the cell is within
+ *               ~3.46 km (half a diagonal) either side of it.
+ *   nearestKm   the floor: no donor in this cell can be closer than this. What
+ *               the donor's chosen travel radius is gated on (GB-35), because
+ *               it is the only one of the two that cannot exclude a donor who
+ *               is genuinely inside the range they agreed to.
+ *
+ * The ~3.46 km spread is why the travel radii are a coarse 5/10/25 ladder
+ * rather than a fine slider: a finer control would imply a precision that a
+ * ~4.9 km cell does not carry.
+ */
+export function coverCellsWithDistance(lat: number, lng: number, radiusKm: number): CoverCell[] {
   assertLatLng(lat, lng);
   if (!Number.isFinite(radiusKm) || radiusKm <= 0) {
     throw new TypeError(`radiusKm must be > 0: ${radiusKm}`);
@@ -116,14 +190,15 @@ export function coverCells(lat: number, lng: number, radiusKm: number): string[]
   const candidates = ngeohash.bboxes(minLat, minLng, maxLat, maxLng, GEOHASH_PRECISION);
   const keepThresholdKm = radiusKm + CELL_DIAGONAL_KM / 2;
 
-  const cells = new Set<string>();
+  const byCell = new Map<string, CoverCell>();
   for (const cell of candidates) {
     const { latitude, longitude } = ngeohash.decode(cell);
-    if (distanceKm(lat, lng, latitude, longitude) <= keepThresholdKm) {
-      cells.add(cell);
+    const d = distanceKm(lat, lng, latitude, longitude);
+    if (d <= keepThresholdKm) {
+      byCell.set(cell, { cell, distanceKm: d, nearestKm: nearestPointKm(lat, lng, cell) });
     }
   }
-  return [...cells];
+  return [...byCell.values()];
 }
 
 /**

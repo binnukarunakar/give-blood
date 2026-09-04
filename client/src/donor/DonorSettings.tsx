@@ -9,6 +9,7 @@ import { api, TRANSPORT_STATUS } from '../lib/api';
 import type { DonorPatchInput, DonorView } from '../lib/apiTypes';
 import { Banner, Button, Card, ConfirmSheet, Switch } from '../ui';
 import { activeSnooze, formatDayTime, isFuture, SNOOZE_24H_MS, SNOOZE_7D_MS } from './donorFormat';
+import { TravelRadiusPicker } from './TravelRadiusPicker';
 
 const OFFLINE = 'You appear to be offline. Reconnect and try again.';
 const SAVE_FAILED = 'Could not save that change. Try again.';
@@ -20,7 +21,7 @@ const CONSENT_NOTE =
 const OPT_OUT_CONSEQUENCE =
   'You will not be alerted again until you turn this back on. Your donor profile stays as it is.';
 
-type Busy = 'available' | 'snooze' | 'phone' | 'consent' | null;
+type Busy = 'available' | 'snooze' | 'phone' | 'consent' | 'radius' | null;
 
 export interface DonorSettingsProps {
   donor: DonorView;
@@ -99,6 +100,14 @@ export function DonorSettings({ donor, onDonor }: DonorSettingsProps): ReactElem
             Clear snooze
           </Button>
         </div>
+      </div>
+
+      <div className="snooze-block">
+        <TravelRadiusPicker
+          value={donor.travelRadiusKm}
+          disabled={busy === 'radius'}
+          onChange={(next) => void patch({ travelRadiusKm: next }, 'radius')}
+        />
       </div>
 
       <Switch

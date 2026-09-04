@@ -32,6 +32,16 @@ export type PledgeState = 'active' | 'donated' | 'withdrawn' | 'no_show' | 'rele
 
 // ── Donor ────────────────────────────────────────────────────────────────────
 
+/**
+ * How far the donor is willing to travel, in km. Server-mirrored: the ladder
+ * matches RADIUS_TIERS_KM and the donor CHECK constraint. The matcher compares
+ * this against the distance to the donor's own cell, so a wider choice does not
+ * mean more alerts now — it means being reachable if the nearer tiers come up
+ * empty and the request escalates.
+ */
+export const TRAVEL_RADII_KM = [5, 10, 25] as const;
+export type TravelRadiusKm = (typeof TRAVEL_RADII_KM)[number];
+
 /** POST /donors — `consent` must be the literal true (no silent opt-in). */
 export interface RegisterDonorInput {
   handle: string;
@@ -39,6 +49,7 @@ export interface RegisterDonorInput {
   /** geohash-5 cell, truncated ON DEVICE. Exact GPS never leaves the browser. */
   geohash5: string;
   consent: true;
+  travelRadiusKm?: TravelRadiusKm;
 }
 
 export interface DonorRegistration {
@@ -78,6 +89,7 @@ export interface DonorView {
   sharePhoneOnAccept: boolean;
   pushVerified: boolean;
   lastDonationAt: string | null;
+  travelRadiusKm: TravelRadiusKm;
   activePledge: ActivePledge | null;
 }
 
@@ -90,6 +102,7 @@ export interface DonorPatchInput {
   sharePhoneOnAccept?: boolean;
   geohash5?: string;
   bloodGroup?: BloodGroup;
+  travelRadiusKm?: TravelRadiusKm;
 }
 
 export interface PushTokenAccepted {

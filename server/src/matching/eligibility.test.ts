@@ -14,6 +14,12 @@ const BASE_CELL = ngeohash.encode(HOSPITAL_LAT, HOSPITAL_LNG, 5);
 // ~18 km due north: centroid ~19.7 km out — beyond tier-0 keep threshold
 // (5 km + half diagonal ~8.5 km), well inside tier-2 (25 km).
 const FAR_CELL = ngeohash.encode(HOSPITAL_LAT + 0.1618, HOSPITAL_LNG, 5);
+// The travel-radius boundary cell (GB-35 regression). Its CENTROID is 5.04 km
+// out — just past the 5 km rung — but its NEAREST point is only 2.59 km away,
+// so it can hold a donor comfortably inside a 5 km promise. Gating on the
+// centroid excluded that donor; gating on the nearest point does not. In the
+// tier-0 cover either way (5.04 <= 5 + half-diagonal).
+const EDGE_CELL = ngeohash.encode(HOSPITAL_LAT + 0.024, HOSPITAL_LNG, 5);
 
 const DAYTIME = new Date('2026-07-15T16:00:00Z'); // 12:00 donor-local in New York
 const NY_2159 = new Date('2026-07-15T01:59:00Z');
@@ -85,6 +91,8 @@ interface DonorSeed {
   available?: boolean;
   snoozeUntil?: Date | null;
   lastDonationAt?: Date | null;
+  /** Omitted = column DEFAULT 25, i.e. the pre-GB-35 reach. */
+  travelRadiusKm?: 5 | 10 | 25;
 }
 
 /** Baseline donor is fully eligible; each test flips exactly one gate. */
@@ -92,8 +100,10 @@ async function seedDonor(o: DonorSeed = {}): Promise<string> {
   seq += 1;
   const res = await db.query<{ donor_id: string }>(
     `INSERT INTO donor (firebase_uid, handle, blood_group, geohash5, tz, phone, push_token,
-                        push_verified_at, opted_in, available, snooze_until, last_donation_at)
-     VALUES ($11, $1, $2, $3, $4, 'DONOR_PHONE', $5, $6, $7, $8, $9, $10) RETURNING donor_id`,
+                        push_verified_at, opted_in, available, snooze_until, last_donation_at,
+                        travel_radius_km)
+     VALUES ($11, $1, $2, $3, $4, 'DONOR_PHONE', $5, $6, $7, $8, $9, $10, $12::smallint)
+     RETURNING donor_id`,
     [
       `donor_${seq}`,
       o.bloodGroup ?? 'B+',
@@ -106,6 +116,7 @@ async function seedDonor(o: DonorSeed = {}): Promise<string> {
       o.snoozeUntil?.toISOString() ?? null,
       o.lastDonationAt?.toISOString() ?? null,
       `uid_donor_${seq}`, // $11 — unique auth linkage per seeded donor (migration 0002)
+      o.travelRadiusKm ?? 25, // $12 — matches the column DEFAULT (migration 0003)
     ],
   );
   return firstRow(res).donor_id;
@@ -263,4 +274,91 @@ test('tz independence: same UTC instant, NY 23:00 quiet vs LA 20:00 awake', asyn
   await seedDonor(); // America/New_York — 23:00 local, inside quiet hours
   const la = await seedDonor({ tz: 'America/Los_Angeles' }); // 20:00 local, awake
   expect(await runIds({ now: NY_23_LA_20 })).toEqual([la]);
+});
+
+// ── Donor-chosen travel radius (GB-35) ──────────────────────────────────────
+// The donor answers "how far will you travel?"; the matcher compares that to
+// the distance to their own cell. The request's tier still decides WHEN a
+// farther donor becomes reachable, so a willing-but-distant donor is only
+// paged once the nearer tiers have failed to fill the request.
+
+test('travel radius defaults to the widest rung, so pre-GB-35 reach is unchanged', async () => {
+  const id = await seedDonor({ geohash5: FAR_CELL }); // no travelRadiusKm set
+  expect(await runIds({ tierIdx: 2 })).toEqual([id]);
+});
+
+test('far donor willing to travel 25 km is reached at tier 2', async () => {
+  const id = await seedDonor({ geohash5: FAR_CELL, travelRadiusKm: 25 });
+  expect(await runIds({ tierIdx: 2 })).toEqual([id]);
+});
+
+test('far donor willing to travel 25 km is NOT reached at tier 0 — escalation still gates it', async () => {
+  await seedDonor({ geohash5: FAR_CELL, travelRadiusKm: 25 });
+  expect(await runIds({ tierIdx: 0 })).toEqual([]);
+});
+
+test('far donor who will only travel 10 km is excluded even at tier 2', async () => {
+  await seedDonor({ geohash5: FAR_CELL, travelRadiusKm: 10 }); // cell centroid ~19.7 km out
+  expect(await runIds({ tierIdx: 2 })).toEqual([]);
+});
+
+test('far donor who will only travel 5 km is excluded at every tier', async () => {
+  await seedDonor({ geohash5: FAR_CELL, travelRadiusKm: 5 });
+  for (const tierIdx of [0, 1, 2] as const) {
+    expect(await runIds({ tierIdx })).toEqual([]);
+  }
+});
+
+test('near donor who will only travel 5 km is still reached at tier 0', async () => {
+  const id = await seedDonor({ geohash5: BASE_CELL, travelRadiusKm: 5 });
+  expect(await runIds({ tierIdx: 0 })).toEqual([id]);
+});
+
+test('travel radius filters per donor, not per request: near 5 km in, far 10 km out', async () => {
+  const near = await seedDonor({ geohash5: BASE_CELL, travelRadiusKm: 5 });
+  await seedDonor({ geohash5: FAR_CELL, travelRadiusKm: 10 });
+  expect(await runIds({ tierIdx: 2 })).toEqual([near]);
+});
+
+test('the DB rejects a travel radius off the ladder', async () => {
+  await expect(
+    db.query(
+      `INSERT INTO donor (firebase_uid, handle, blood_group, geohash5, tz, phone,
+                          opted_in, available, travel_radius_km)
+       VALUES ('uid_bad_radius', 'bad', 'B+', $1, 'America/New_York', 'DONOR_PHONE',
+               true, true, 7::smallint)`,
+      [BASE_CELL],
+    ),
+  ).rejects.toThrow();
+});
+
+// ── Travel radius is gated on the cell's NEAREST point, not its centroid ─────
+// A precision-5 cell is ~4.9 km across, so its centroid is a poor stand-in for
+// where a donor in it actually is. Comparing the donor's promise against the
+// centroid silently dropped donors who were well inside the distance they
+// agreed to travel; comparing against the nearest point drops only donors who
+// certainly are not. Over-including costs a decline. Under-including means a
+// donor minutes away never hears that someone needed blood.
+
+test('GB-35 regression: donor whose cell centroid is past their radius, but who can be inside it, is still reached', async () => {
+  // EDGE_CELL centroid 5.04 km (> 5), nearest point 2.59 km (< 5).
+  const id = await seedDonor({ geohash5: EDGE_CELL, travelRadiusKm: 5 });
+  expect(await runIds({ tierIdx: 0 })).toEqual([id]);
+});
+
+test('the nearest-point gate does not resurrect a donor who is genuinely out of range', async () => {
+  // FAR_CELL nearest point is still ~17 km — a 10 km donor cannot be inside it.
+  await seedDonor({ geohash5: FAR_CELL, travelRadiusKm: 10 });
+  expect(await runIds({ tierIdx: 2 })).toEqual([]);
+});
+
+test('the nearest-point gate does not bypass escalation: edge donor is unreachable before their tier', async () => {
+  // Same donor as the regression test, but the request has not escalated to a
+  // tier whose cover contains EDGE_CELL yet — a tighter cover, not the radius
+  // gate, is what keeps them out.
+  const id = await seedDonor({ geohash5: EDGE_CELL, travelRadiusKm: 5 });
+  const reached = await runIds({ tierIdx: 0 });
+  expect(reached).toEqual([id]); // tier 0 already covers this cell
+  await db.query(`UPDATE donor SET geohash5 = $1 WHERE donor_id = $2`, [FAR_CELL, id]);
+  expect(await runIds({ tierIdx: 0 })).toEqual([]);
 });

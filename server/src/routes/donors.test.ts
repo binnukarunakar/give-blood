@@ -179,7 +179,7 @@ test('GET /donors/me returns the view; never exposes pushToken or firebaseUid', 
   expect(res.statusCode).toBe(200);
   const b = res.json<Record<string, unknown>>();
   expect(Object.keys(b).sort()).toEqual(['activePledge', 'available', 'bloodGroup', 'donorId', 'geohash5', 'handle',
-    'lastDonationAt', 'optedIn', 'pushVerified', 'sharePhoneOnAccept', 'snoozeUntil', 'tz']);
+    'lastDonationAt', 'optedIn', 'pushVerified', 'sharePhoneOnAccept', 'snoozeUntil', 'travelRadiusKm', 'tz']);
   expect(b).not.toHaveProperty('pushToken');
   expect(b).not.toHaveProperty('push_token');
   expect(b).not.toHaveProperty('firebaseUid');

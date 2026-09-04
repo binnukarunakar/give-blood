@@ -25,6 +25,7 @@ const DONOR: DonorView = {
   sharePhoneOnAccept: false,
   pushVerified: true,
   lastDonationAt: null,
+  travelRadiusKm: 25,
   activePledge: null,
 };
 

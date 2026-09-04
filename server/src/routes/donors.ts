@@ -16,6 +16,7 @@ import {
   ACTIVE_PLEDGE_VIEW_SQL,
   type ActivePledgeRow,
   buildDonorUpdate,
+  DEFAULT_TRAVEL_RADIUS_KM,
   DONOR_VIEW_COLUMNS,
   type DonorViewRow,
   donationSchema,
@@ -32,9 +33,9 @@ const SELECT_VIEW_SQL = `SELECT ${DONOR_VIEW_COLUMNS} FROM donor WHERE firebase_
 const INSERT_DONOR_SQL = `
   INSERT INTO donor
     (firebase_uid, handle, blood_group, geohash5, tz, phone,
-     opted_in, available, share_phone_on_accept)
+     opted_in, available, share_phone_on_accept, travel_radius_km)
   VALUES
-    ($1, $2, $3::blood_group, $4, $5, $6, true, true, false)
+    ($1, $2, $3::blood_group, $4, $5, $6, true, true, false, $7::smallint)
   RETURNING donor_id, handle, blood_group, geohash5, tz
 `;
 
@@ -128,6 +129,7 @@ export function registerDonorRoutes(
         body.geohash5,
         tz,
         phone,
+        body.travelRadiusKm ?? DEFAULT_TRAVEL_RADIUS_KM,
       ]);
       row = res.rows[0];
     } catch (err) {

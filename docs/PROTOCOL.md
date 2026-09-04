@@ -118,7 +118,13 @@ Every 60 s, one idempotent transaction over all non-terminal requests:
 
 1. **Tier advance:** state in (alerting, partially_pledged) AND tier window
    elapsed AND active pledges < units_needed → radius_tier++ (5 → 10 → 25 km
-   cap), dispatch newly eligible donors.
+   cap), dispatch newly eligible donors. "Newly eligible" is filtered by each
+   donor's own `travel_radius_km` (GB-35), so widening the circle only reaches
+   people who already said they would come that far — and only after the nearer
+   tiers failed to fill the request. That filter compares against the nearest
+   point of the donor's cell, not its centroid, so a coarse location can never
+   exclude a donor who is genuinely inside the range they agreed to
+   (DATA_MODEL.md, "Which distance").
 2. **Quiet-hours pickup:** donors whose quiet window ended since the last
    sweep and are still eligible at the current tier get dispatched (they were
    skipped, not excluded — the eligibility predicate re-evaluates each sweep).

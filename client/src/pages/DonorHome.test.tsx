@@ -29,6 +29,7 @@ const DONOR: DonorView = {
   sharePhoneOnAccept: false,
   pushVerified: true,
   lastDonationAt: null,
+  travelRadiusKm: 25,
   activePledge: null,
 };
 
@@ -114,12 +115,21 @@ describe('DonorHome', () => {
   });
 
   it('computes the eligible-again date 56 days after the last donation', async () => {
-    apiMock.getMe.mockResolvedValue(donorOk({ lastDonationAt: '2026-07-01T10:00:00.000Z' }));
-    renderHome();
+    // The clock is pinned: the banner only renders while the cooldown is still
+    // running, so a fixed donation date silently stops testing anything once
+    // real time passes its 56th day. Pin "now" mid-cooldown instead.
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    vi.setSystemTime(new Date('2026-08-01T12:00:00.000Z')); // 31 days in, 25 to go
+    try {
+      apiMock.getMe.mockResolvedValue(donorOk({ lastDonationAt: '2026-07-01T10:00:00.000Z' }));
+      renderHome();
 
-    // 2026-07-01 + 56 days = 2026-08-26.
-    expect(await screen.findByText(/56 days after your last donation/)).toBeInTheDocument();
-    expect(screen.getByText(/Aug 26, 2026|26 Aug 2026/)).toBeInTheDocument();
+      // 2026-07-01 + 56 days = 2026-08-26.
+      expect(await screen.findByText(/56 days after your last donation/)).toBeInTheDocument();
+      expect(screen.getByText(/Aug 26, 2026|26 Aug 2026/)).toBeInTheDocument();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('PATCHes availability when the toggle is switched off', async () => {

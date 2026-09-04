@@ -9,9 +9,10 @@
 // line above it names what is still missing rather than leaving a dead button.
 import { useCallback, useId, useState, type FormEvent, type ReactElement } from 'react';
 import { api, TRANSPORT_STATUS } from '../lib/api';
-import type { BloodGroup } from '../lib/apiTypes';
+import type { BloodGroup, TravelRadiusKm } from '../lib/apiTypes';
 import { Banner, BloodGroupGrid, Button, Card, Field, StickyBar, Switch } from '../ui';
 import { LocationPicker } from './LocationPicker';
+import { TravelRadiusPicker } from './TravelRadiusPicker';
 import { PushSetup } from './PushSetup';
 
 const HANDLE_MAX = 40;
@@ -47,6 +48,9 @@ export function Onboarding({ onComplete }: OnboardingProps): ReactElement {
   const [handle, setHandle] = useState('');
   const [bloodGroup, setBloodGroup] = useState<BloodGroup | null>(null);
   const [geohash5, setGeohash5] = useState<string | null>(null);
+  // Defaults to the widest rung: the donor can narrow it, but the pool starts
+  // as reachable as possible (GB-35).
+  const [travelRadiusKm, setTravelRadiusKm] = useState<TravelRadiusKm>(25);
   const [consent, setConsent] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -73,6 +77,7 @@ export function Onboarding({ onComplete }: OnboardingProps): ReactElement {
       bloodGroup,
       geohash5,
       consent: true,
+      travelRadiusKm,
     });
     setSubmitting(false);
     if (result.ok) {
@@ -152,6 +157,7 @@ export function Onboarding({ onComplete }: OnboardingProps): ReactElement {
         <Card step="03" title="Area">
           <LocationPicker value={geohash5} onChange={onLocation} />
           <p className="privacy-note">{AREA_NOTE}</p>
+          <TravelRadiusPicker value={travelRadiusKm} onChange={setTravelRadiusKm} />
         </Card>
 
         {error === null ? null : <Banner tone="error">{error}</Banner>}
